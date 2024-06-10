@@ -7,8 +7,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.recetium.data.Consumidor
 import com.example.recetium.data.Creador
 import com.example.recetium.data.Receta
+import com.example.recetium.data.Repost
 import com.example.recetium.data.RetrofitInstance
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class HomeViewModel : ViewModel() {
 
@@ -40,10 +44,12 @@ class HomeViewModel : ViewModel() {
     }
 
     fun setUserType(isChef: Boolean, user: Any?) {
-        _isChef.value = isChef
-        if (isChef) {
-            _creador.value = user as Creador?
+        if (isChef && user is Creador) {
+            _isChef.value = !user.isBanned
+            _creador.value = user
         } else {
+            _isChef.value = false
+            _creador.value = null
             _consumidor.value = user as Consumidor?
         }
     }
@@ -52,5 +58,28 @@ class HomeViewModel : ViewModel() {
         _isChef.value = null
         _creador.value = null
         _consumidor.value = null
+    }
+
+    fun createRepost(receta: Receta, consumidor: Consumidor, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault())
+                val currentDate = Date()
+                val formattedDate = sdf.format(currentDate)
+
+                val repost = Repost(
+                    idRepost = 0,
+                    idReceta = receta.idReceta.toLong(),
+                    idCreador = receta.creador?.idCreador?.toLong() ?: 1,
+                    idConsumidor = consumidor.idConsumidor.toLong(),
+                    fechaRepost = formattedDate
+                )
+                val response = RetrofitInstance.api.createRepost(repost)
+                onResult(response.isSuccessful)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onResult(false)
+            }
+        }
     }
 }

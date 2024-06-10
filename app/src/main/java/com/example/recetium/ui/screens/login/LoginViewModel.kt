@@ -49,12 +49,9 @@ class LoginViewModel : ViewModel() {
                 _recipes.postValue(recetasResponse)
 
                 val creadoresResponse = RetrofitInstance.api.getCreadores()
-                // manejar los creadores si fuera necesario
+                Log.d("LoginViewModel", "Creadores: $creadoresResponse")
 
-                // Cargar consumidores si es necesario
                 val consumidoresResponse = RetrofitInstance.api.getConsumidores()
-                // manejar los consumidores si fuera necesario
-
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -83,6 +80,7 @@ class LoginViewModel : ViewModel() {
             if (usernameValue != null && passwordValue != null) {
                 val creador = RetrofitInstance.api.getCreadores().find { it.nombre == usernameValue && it.contraseñaCreador == passwordValue }
                 if (creador != null) {
+                    Log.d("LoginViewModel", "Creador isBanned: ${creador.isBanned}")
                     _isChef.value = !creador.isBanned
                     _creador.value = creador
                     _consumidor.value = null

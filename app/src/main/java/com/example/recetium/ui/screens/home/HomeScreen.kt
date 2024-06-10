@@ -21,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,12 +46,20 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.recetium.data.Receta
 import com.example.recetium.ui.navigation.AppScreens
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import com.example.recetium.ui.utils.BottomNavigationButton
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
     val recipes by viewModel.recipes.observeAsState(emptyList())
     val isChef by viewModel.isChef.observeAsState(true)
+    val creador by viewModel.creador.observeAsState()
+    val consumidor by viewModel.consumidor.observeAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
     var recipesLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -87,9 +97,17 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
             }
         },
         floatingActionButton = {
-            if (isChef ) {
+            if (isChef) {
                 FloatingActionButton(
-                    onClick = { navController.navigate(AppScreens.PostRecetasScreen.route) },
+                    onClick = {
+                        if (creador?.isBanned == true) {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("No puedes publicar recetas porque estás baneado.")
+                            }
+                        } else {
+                            navController.navigate(AppScreens.PostRecetasScreen.route)
+                        }
+                    },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 ) {
@@ -97,35 +115,26 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                 }
             }
         },
-        floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
+        floatingActionButtonPosition = FabPosition.End,
         content = { innerPadding ->
-            BodyContent(navController, Modifier.padding(innerPadding), recipes)
-        }
+            BodyContent(navController, Modifier.padding(innerPadding), recipes, viewModel, snackbarHostState)
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     )
-}
-
-@Composable
-fun BottomNavigationButton(icon: ImageVector, label: String, onClick: () -> Unit, selected: Boolean = false) {
-    Column(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(imageVector = icon, contentDescription = label, tint = if (selected) Color.Blue else Color.Black )
-        Text(text = label, color = if (selected) Color.Blue else Color.Black)
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CardItem(recipe: Receta, navController: NavController) {
+fun CardItem(recipe: Receta, navController: NavController, viewModel: HomeViewModel, snackbarHostState: SnackbarHostState) {
+    val consumidor by viewModel.consumidor.observeAsState()
+    val coroutineScope = rememberCoroutineScope()
+
     Card(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp),
-        onClick = { navController.navigate("${AppScreens.CardScreen.route}/${recipe.idReceta}")  }
+        onClick = { navController.navigate("${AppScreens.CardScreen.route}/${recipe.idReceta}") }
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             // Descripción como título
@@ -147,7 +156,19 @@ fun CardItem(recipe: Receta, navController: NavController) {
 
             // Botón pequeño
             Button(
-                onClick = { /* No action for now */ },
+                onClick = {
+                    consumidor?.let {
+                        viewModel.createRepost(recipe, it) { success ->
+                            coroutineScope.launch {
+                                if (success) {
+                                    snackbarHostState.showSnackbar("Repost realizado con éxito.")
+                                } else {
+                                    snackbarHostState.showSnackbar("Error al realizar el repost.")
+                                }
+                            }
+                        }
+                    }
+                },
                 modifier = Modifier
                     .padding(top = 8.dp)
                     .align(Alignment.End),
@@ -164,10 +185,12 @@ fun BodyContent(
     navController: NavController,
     padding: Modifier,
     recetas: List<Receta>,
+    viewModel: HomeViewModel,
+    snackbarHostState: SnackbarHostState
 ) {
     LazyColumn(modifier = padding) {
         items(recetas) { receta ->
-            CardItem(receta, navController)
+            CardItem(receta, navController, viewModel, snackbarHostState)
         }
     }
 }

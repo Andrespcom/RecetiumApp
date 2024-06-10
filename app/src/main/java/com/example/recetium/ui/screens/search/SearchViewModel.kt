@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.recetium.data.Consumidor
 import com.example.recetium.data.Creador
 import com.example.recetium.data.Receta
+import com.example.recetium.data.Repost
 import com.example.recetium.data.RetrofitInstance
 import kotlinx.coroutines.launch
 
@@ -19,6 +20,9 @@ class SearchViewModel : ViewModel() {
 
     private val _consumidores = MutableLiveData<List<Consumidor>>()
     val consumidores: LiveData<List<Consumidor>> = _consumidores
+
+    private val _reposts = MutableLiveData<List<Receta>>()
+    val reposts: LiveData<List<Receta>> = _reposts
 
     private val _searchResults = MutableLiveData<List<String>>()
     val searchResults: LiveData<List<String>> = _searchResults
@@ -57,5 +61,16 @@ class SearchViewModel : ViewModel() {
         allResults.addAll(filteredConsumidores)
 
         _searchResults.postValue(allResults)
+    }
+
+    fun loadRepostsByConsumidor(consumidorId: Long) {
+        viewModelScope.launch {
+            try {
+                val repostsResponse = RetrofitInstance.api.getRepostsByConsumidor(consumidorId)
+                _reposts.postValue(repostsResponse)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }

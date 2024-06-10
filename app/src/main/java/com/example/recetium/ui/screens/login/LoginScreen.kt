@@ -132,8 +132,8 @@ fun LoginButton(loginEnabled: Boolean, onLoginSelected: () -> Unit) {
             .fillMaxWidth()
             .height(48.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFE6D354),
-            disabledContainerColor = Color(0xFFF78058),
+            containerColor = Color(0xFF9AF758),
+            disabledContainerColor = Color(0xFFFF0000),
             contentColor = Color.White,
             disabledContentColor = Color.White
         ),
