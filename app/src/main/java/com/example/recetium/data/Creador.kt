@@ -4,5 +4,6 @@ data class Creador(
     val idCreador: Int,
     val fechaCreacion: String,
     val contraseñaCreador: String,
-    val nombre: String
+    var nombre: String,
+    var isBanned: Boolean
 )

@@ -50,7 +50,6 @@ import com.example.recetium.ui.navigation.AppScreens
 fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
     val recipes by viewModel.recipes.observeAsState(emptyList())
     val isChef by viewModel.isChef.observeAsState(true)
-
     var recipesLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -72,6 +71,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             navController.navigate(AppScreens.LoginScreen.route) {
                                 popUpTo(AppScreens.LoginScreen.route) { inclusive = true }
                             }
+                            viewModel.clearUser()
                         }
                     )
                 }
@@ -87,7 +87,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
             }
         },
         floatingActionButton = {
-            if (isChef) {
+            if (isChef ) {
                 FloatingActionButton(
                     onClick = { navController.navigate(AppScreens.PostRecetasScreen.route) },
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -125,7 +125,7 @@ fun CardItem(recipe: Receta, navController: NavController) {
             .padding(8.dp)
             .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp),
-        onClick = { navController.navigate(AppScreens.CardScreen.route) }
+        onClick = { navController.navigate("${AppScreens.CardScreen.route}/${recipe.idReceta}")  }
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             // Descripción como título

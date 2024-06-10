@@ -29,7 +29,9 @@ import androidx.compose.ui.unit.sp
 import com.example.recetium.R
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.recetium.ui.navigation.AppScreens
 import com.example.recetium.ui.screens.home.HomeViewModel
 
@@ -39,10 +41,15 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController, homeVie
     val isChef by viewModel.isChef.observeAsState()
     val recipes by viewModel.recipes.observeAsState()
     val creador by viewModel.creador.observeAsState()
+    val consumidor by viewModel.consumidor.observeAsState()
 
     if (loginSuccess == true) {
         LaunchedEffect(Unit) {
-            homeViewModel.setUserType(isChef ?: false, creador)
+            if (isChef == true) {
+                homeViewModel.setUserType(true, creador)
+            } else {
+                homeViewModel.setUserType(false, consumidor)
+            }
             homeViewModel.loadRecipes()
             navController.navigate(AppScreens.HomeScreen.route)
         }
@@ -53,12 +60,12 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController, homeVie
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Login(Modifier.align(Alignment.Center), viewModel)
+        Login(Modifier.align(Alignment.Center), viewModel, navController)
     }
 }
 
 @Composable
-fun Login(modifier: Modifier, viewModel: LoginViewModel) {
+fun Login(modifier: Modifier, viewModel: LoginViewModel, navController: NavController) {
     val username by viewModel.username.observeAsState("")
     val password by viewModel.password.observeAsState("")
     val loginEnabled by viewModel.loginEnabled.observeAsState(false)
@@ -69,6 +76,8 @@ fun Login(modifier: Modifier, viewModel: LoginViewModel) {
         UsernameField(username) { viewModel.onLoginChange(it, password) }
         Spacer(Modifier.padding(4.dp))
         PasswordField(password) { viewModel.onLoginChange(username, it) }
+        Spacer(Modifier.padding(8.dp))
+        CrearCuenta(Modifier.align(Alignment.End), navController = navController)
         Spacer(Modifier.padding(8.dp))
         LoginButton(loginEnabled) { viewModel.onLoginSelected() }
     }
@@ -110,7 +119,8 @@ fun PasswordField(password: String, onTextFieldChanged: (String) -> Unit) {
             containerColor = Color(0xFFDEDDDD),
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
-        )
+        ),
+        visualTransformation = PasswordVisualTransformation()
     )
 }
 
@@ -139,5 +149,16 @@ fun HeaderImage(modifier: Modifier) {
         painter = painterResource(R.drawable.logo),
         contentDescription = "Header",
         modifier = modifier
+    )
+}
+
+@Composable
+fun CrearCuenta(modifier: Modifier, navController: NavController) {
+    Text(
+        text = "Crear nueva cuenta",
+        modifier = modifier.clickable { navController.navigate(AppScreens.RegisterScreen.route) },
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color(0xFF03A9F4)
     )
 }

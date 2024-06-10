@@ -9,29 +9,37 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.recetium.data.Consumidor
 import com.example.recetium.data.Creador
 import com.example.recetium.ui.navigation.AppScreens
+import com.example.recetium.ui.screens.home.HomeViewModel
 import com.example.recetium.ui.utils.BottomNavigationButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConfigScreen(navController: NavController, viewModel: ConfigViewModel) {
+fun ConfigScreen(navController: NavController, homeViewModel: HomeViewModel) {
+    val viewModel: ConfigViewModel = remember { ConfigViewModel(homeViewModel) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,38 +65,62 @@ fun ConfigScreen(navController: NavController, viewModel: ConfigViewModel) {
             }
         }
     ) { innerPadding ->
-        BodyContent(Modifier.padding(innerPadding), viewModel, navController)
+        BodyContent(Modifier.padding(innerPadding), viewModel)
     }
 }
 
 @Composable
-fun BodyContent(padding: Modifier, viewModel: ConfigViewModel, navController: NavController) {
-    val creadores by viewModel.creadores.observeAsState(emptyList())
-    val consumidores by viewModel.consumidores.observeAsState(emptyList())
+fun BodyContent(modifier: Modifier, viewModel: ConfigViewModel) {
+    val user by viewModel.user.observeAsState()
+    val isCreador = user is Creador
 
-    Column(modifier = padding.padding(16.dp)) {
-        Text(text = "Creadores", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
-        creadores.forEach { creador ->
-            CreadorCard(creador = creador, navController = navController)
+    user?.let {
+        Column(modifier = modifier.padding(16.dp)) {
+            if (isCreador) {
+                CreadorDetails(creador = it as Creador, viewModel = viewModel)
+            } else {
+                ConsumidorDetails(consumidor = it as Consumidor, viewModel = viewModel)
+            }
         }
+    } ?: run {
+        Text(text = "No user data available", modifier = Modifier.padding(16.dp))
+    }
+}
 
-        Text(text = "Consumidores", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
-        consumidores.forEach { consumidor ->
-            ConsumidorCard(consumidor = consumidor)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreadorDetails(creador: Creador, viewModel: ConfigViewModel) {
+    Column {
+        TextField(
+            value = creador.nombre,
+            onValueChange = { viewModel.updateCreadorNombre(it) },
+            label = { Text("Nombre") },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+        )
+        Button(
+            onClick = { viewModel.saveCreador() },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Guardar")
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreadorCard(creador: Creador, navController: NavController) {
-    Column(modifier = Modifier.padding(bottom = 16.dp)) {
-        Text(text = creador.nombre, style = MaterialTheme.typography.bodyLarge)
-
+fun ConsumidorDetails(consumidor: Consumidor, viewModel: ConfigViewModel) {
+    Column {
+        TextField(
+            value = consumidor.nombre,
+            onValueChange = { viewModel.updateConsumidorNombre(it) },
+            label = { Text("Nombre") },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+        )
+        Button(
+            onClick = { viewModel.saveConsumidor() },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Guardar")
+        }
     }
 }
-
-@Composable
-fun ConsumidorCard(consumidor: Consumidor) {
-    Text(text = consumidor.nombre, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 8.dp))
-}
-

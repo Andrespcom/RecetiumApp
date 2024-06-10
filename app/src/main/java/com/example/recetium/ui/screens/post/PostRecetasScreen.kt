@@ -25,6 +25,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -89,7 +90,7 @@ fun DescriptionField(description: String, onValueChange: (String) -> Unit) {
     OutlinedTextField(
         value = description,
         onValueChange = onValueChange,
-        label = { Text("Descripción") },
+        label = { Text("Nombre") },
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp),

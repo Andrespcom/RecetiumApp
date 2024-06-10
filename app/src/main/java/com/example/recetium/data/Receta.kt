@@ -17,7 +17,7 @@ data class Receta(
         descripcion: String
     ) : this(
         idReceta,
-        Creador(idCreador = creadorId, fechaCreacion = "", contraseñaCreador = "", nombre = ""),
+        Creador(idCreador = creadorId, fechaCreacion = "", contraseñaCreador = "", nombre = "", isBanned = false),
         fechaPublicacionReceta,
         strImage,
         ingredientes,

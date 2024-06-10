@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.recetium.data.Consumidor
 import com.example.recetium.data.Creador
 import com.example.recetium.data.Receta
 import com.example.recetium.data.RetrofitInstance
@@ -34,6 +35,9 @@ class LoginViewModel : ViewModel() {
     private val _creador = MutableLiveData<Creador?>()
     val creador: LiveData<Creador?> = _creador
 
+    private val _consumidor = MutableLiveData<Consumidor?>()
+    val consumidor: LiveData<Consumidor?> = _consumidor
+
     init {
         loadInitialData()
     }
@@ -45,11 +49,11 @@ class LoginViewModel : ViewModel() {
                 _recipes.postValue(recetasResponse)
 
                 val creadoresResponse = RetrofitInstance.api.getCreadores()
-                // Aquí podrías manejar los creadores si fuera necesario
+                // manejar los creadores si fuera necesario
 
                 // Cargar consumidores si es necesario
                 val consumidoresResponse = RetrofitInstance.api.getConsumidores()
-                // Aquí podrías manejar los consumidores si fuera necesario
+                // manejar los consumidores si fuera necesario
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -79,8 +83,9 @@ class LoginViewModel : ViewModel() {
             if (usernameValue != null && passwordValue != null) {
                 val creador = RetrofitInstance.api.getCreadores().find { it.nombre == usernameValue && it.contraseñaCreador == passwordValue }
                 if (creador != null) {
-                    _isChef.value = true
+                    _isChef.value = !creador.isBanned
                     _creador.value = creador
+                    _consumidor.value = null
                     _loginSuccess.value = true
                     return@launch
                 }
@@ -89,6 +94,7 @@ class LoginViewModel : ViewModel() {
                 if (consumidor != null) {
                     _isChef.value = false
                     _creador.value = null
+                    _consumidor.value = consumidor
                     _loginSuccess.value = true
                 }
             }
